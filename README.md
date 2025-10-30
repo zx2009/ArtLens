@@ -1,6 +1,4 @@
-# 🎨 ArtLens - Interactive AI Art Education App
-
-**Congressional App Challenge 2025 Submission**
+# ArtLens - Interactive AI Art Education App
 
 > *"See. Learn. Feel. Create."*
 
@@ -8,42 +6,42 @@ ArtLens is an innovative web application that makes art discovery fun, interacti
 
 ---
 
-## 🌟 Features
+## Features
 
 ### Core Functionality
-- **🔍 AI Artwork Recognition** - Upload or capture photos of artworks for instant identification using GPT-4 Vision
+- ** AI Artwork Recognition** - Upload or capture photos of artworks for instant identification using GPT-4 Vision
   - Image hash caching for instant duplicate detection (<100ms)
   - 90%+ accuracy with confidence scores
   - SHA256 fingerprinting to prevent duplicate AI calls
-- **📚 Five Interactive Learning Modes**:
+- ** Five Interactive Learning Modes**:
   1. **Learn** - AI-generated educational descriptions (300-400 words) with historical context
   2. **Artist Bio** - Comprehensive artist biographies with life story, style, notable works, and legacy
   3. **Chat** - Interactive conversations with context-aware AI art expert
   4. **Quiz** - Cached quiz questions with personal best tracking and improvement feedback
   5. **Related Art** - Discover 470,000+ museum artworks from The Met with smart matching
-- **🖼️ Personal Gallery** - Curate favorite artworks with personal reflections
+- ** Personal Gallery** - Curate favorite artworks with personal reflections
   - Smart duplicate prevention (won't add same artwork twice)
   - Database-level unique constraints
   - Visual feedback on already-saved items
-- **� Related Artwork Discovery** - Explore connections by artist, style, era with real museum images
-- **�🏆 Advanced Gamification**:
+- ** Related Artwork Discovery** - Explore connections by artist, style, era with real museum images
+- ** Advanced Gamification**:
   - XP system with 5+ levels (Novice → Master)
   - 10+ achievement badges (Discovery, Learning, Performance)
   - Personal best tracking for quiz retakes
   - Progress dashboard with stats
-- **🌈 Theme Customization** - 4 seasonal color schemes (Spring, Summer, Fall, Winter)
-- **📤 Social Sharing** - 3-tier sharing system (Web Share API, clipboard, manual copy)
+- ** Theme Customization** - 4 seasonal color schemes (Spring, Summer, Fall, Winter)
+- ** Social Sharing** - 3-tier sharing system (Web Share API, clipboard, manual copy)
 
 ### AI Integration
 ArtLens uses **GPT-4 Vision** for artwork recognition and **GPT-4** for content generation.
 
 **Features powered by AI:**
-- 🔍 Visual artwork recognition from images
-- 📚 Educational descriptions with context
-- 👨‍🎨 Artist biographies and legacy information
-- � Context-aware conversations
-- 🎯 Personalized quiz generation
-- 🎨 Related artwork discovery and explanations
+- Visual artwork recognition from images
+- Educational descriptions with context
+- Artist biographies and legacy information
+- Context-aware conversations
+- Personalized quiz generation
+- Related artwork discovery and explanations
 
 **Performance Optimizations:**
 - **Image Hash Caching** - Instant recognition of previously seen artworks (<100ms)
@@ -66,7 +64,7 @@ ArtLens uses **GPT-4 Vision** for artwork recognition and **GPT-4** for content 
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Python 3.9+
@@ -141,42 +139,7 @@ python test_ai.py
 
 ---
 
-## 📁 Project Structure
-
-```
-app_challenge2/
-├── app.py                  # Main Flask application (~650 lines)
-├── config.py               # Configuration settings
-├── models.py               # Database models (5 tables)
-├── ai_services.py          # AI integration (~900 lines)
-├── museum_api_search.py    # The Met Museum API integration
-├── requirements.txt        # Python dependencies (updated)
-├── .env.example            # Environment variables template
-├── migrations/             # Database migration scripts
-│   ├── README.md          # Migration documentation
-│   ├── migrate_add_confidence.py
-│   ├── migrate_add_hash.py
-│   ├── migrate_gallery_constraint.py
-│   ├── backfill_hashes.py
-│   └── remove_gallery_duplicates.py
-├── templates/              # HTML templates
-│   ├── base.html          # Base template with navigation
-│   ├── index.html         # Home page
-│   ├── scan.html          # Artwork scanning page
-│   ├── artwork.html       # Artwork detail with 5 modes (~900 lines)
-│   ├── gallery.html       # User gallery
-│   ├── profile.html       # User profile with stats
-│   ├── leaderboard.html   # Global leaderboard
-│   ├── login.html         # Login page
-│   └── register.html      # Registration page
-└── static/
-    ├── uploads/           # User-uploaded images
-    └── images/            # Sample artwork images
-```
-
----
-
-## 🎮 How to Use
+## How to Use
 
 ### For Users
 
@@ -248,7 +211,7 @@ AZURE_OPENAI_API_VERSION=2024-02-15-preview
 ```bash
 python test_ai.py
 ```
-Shows: 🎭 Demo Mode | 🟢 OpenAI | 🔷 Azure OpenAI
+Shows: Demo Mode | OpenAI | Azure OpenAI
 
 ### Database (Production)
 
@@ -264,7 +227,7 @@ DATABASE_URL=postgresql://username:password@host:port/artlens_db
 
 ---
 
-## 🎨 Design Philosophy
+## Design Philosophy
 
 ### Visual Design
 - **Gallery-inspired**: Clean, elegant interface resembling museum exhibitions
@@ -280,7 +243,7 @@ DATABASE_URL=postgresql://username:password@host:port/artlens_db
 
 ---
 
-## 🏆 Congressional App Challenge Alignment
+## Congressional App Challenge Alignment
 
 | Criteria | Implementation |
 |----------|----------------|
@@ -302,7 +265,7 @@ DATABASE_URL=postgresql://username:password@host:port/artlens_db
 
 ---
 
-## 🚀 Deployment Options
+## Deployment Options
 
 ### Option 1: Heroku
 ```bash
@@ -333,7 +296,7 @@ heroku run flask seed-db
 
 ---
 
-## 📊 Database Schema
+## Database Schema
 
 ```sql
 User
@@ -366,28 +329,8 @@ QuizAttempt
 
 ---
 
-## 🎬 Demo Script (1-Minute)
 
-```
-[0:00-0:10] Introduction
-"Hi! I'm excited to show you ArtLens - an AI-powered app that makes learning about art fun and interactive."
-
-[0:10-0:25] Scan Feature
-"Let's start by scanning a famous painting. I upload an image, and ArtLens instantly recognizes it using computer vision. Look - it's The Starry Night by Van Gogh!"
-
-[0:25-0:40] Interactive Modes
-"Now I can explore in different ways. Learn Mode gives me fascinating details about the painting. In Chat Mode, I can actually ask Van Gogh questions! And Quiz Mode tests my knowledge while earning XP."
-
-[0:40-0:50] Gamification & Gallery
-"I'm building my personal art gallery, earning badges, and leveling up. The more I explore, the more I learn!"
-
-[0:50-1:00] Closing
-"ArtLens makes art education accessible, engaging, and fun. Perfect for students, teachers, and art lovers everywhere. Thank you!"
-```
-
----
-
-## 🛠️ Technology Stack
+## Technology Stack
 
 **Backend**
 - Flask 3.0.0 (Python web framework)
@@ -426,53 +369,18 @@ QuizAttempt
 
 ---
 
-## 📝 Future Enhancements
 
-### Phase 2 (3-6 months)
-- **Social Features**: Follow users, share galleries publicly, comment system
-- **Advanced Gamification**: Daily challenges, limited-time events, team competitions
-- **Teacher Dashboard**: Class management, assignment creation, student progress reports
-- **Enhanced AI**: Audio descriptions, video analysis, AR viewing
-
-### Phase 3 (6-12 months)
-- **Native Mobile Apps**: iOS and Android apps with offline mode
-- **Museum Partnerships**: Verified accounts, exclusive content, audio tours
-- **Premium Features**: Ad-free experience, advanced analytics, priority processing
-- **Internationalization**: Multi-language support (Spanish, French, Chinese, Japanese, Korean)
-
----
-
-## 👥 Team
-
-**Student Developer**: [Your Name]
-**School**: [Your School]
-**Congressional District**: [Your District]
-**Year**: 2025
-
----
-
-## 📄 License
+## License
 
 This project is created for the Congressional App Challenge 2025.
 
 ---
 
-## 🙏 Acknowledgments
 
-- Art images: Public domain or educational fair use
-- Inspiration: Museums worldwide making art accessible
-- Technology: Open-source community
-
----
-
-## 📧 Contact
+## Contact
 
 For questions or feedback:
-- Email: [your-email@example.com]
-- GitHub: [your-github-username]
+- Email: [zixuan.go.1@gmail.com]
+- GitHub: [zx2009]
 
----
 
-**Built with 💜 for art lovers everywhere**
-
-*ArtLens - See. Learn. Feel. Create.*
