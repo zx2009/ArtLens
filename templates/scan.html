@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Artwork - ArtLens{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="text-center mb-8">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
+            Scan an Artwork
+        </h1>
+        <p class="text-xl text-gray-600">
+            Upload a photo or take a picture of any artwork to discover its story
+        </p>
+    </div>
+    
+    <!-- Upload Area -->
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+        <div id="upload-zone" class="border-4 border-dashed border-purple-300 rounded-xl p-12 text-center cursor-pointer hover:border-purple-500 hover:bg-purple-50 transition">
+            <div id="upload-prompt">
+                <i class="fas fa-cloud-upload-alt text-6xl text-purple-400 mb-4"></i>
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">Drop your image here</h3>
+                <p class="text-gray-600 mb-4">or click to browse</p>
+                <button type="button" class="btn-primary text-white px-6 py-3 rounded-full font-medium">
+                    <i class="fas fa-folder-open mr-2"></i> Choose File
+                </button>
+                <p class="text-sm text-gray-500 mt-4">Supports JPG, PNG, GIF (max 16MB)</p>
+            </div>
+            
+            <div id="preview-area" class="hidden">
+                <img id="preview-image" class="max-w-full max-h-96 mx-auto rounded-lg shadow-lg mb-4">
+                <button id="change-image-btn" class="text-purple-600 hover:text-purple-800 font-medium">
+                    <i class="fas fa-redo mr-2"></i> Choose Different Image
+                </button>
+            </div>
+        </div>
+        
+        <input type="file" id="file-input" accept="image/*" class="hidden">
+        
+        <!-- Scan Button -->
+        <div class="mt-8 text-center">
+            <button id="scan-btn" class="btn-primary text-white px-10 py-4 rounded-full font-bold text-xl disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <i class="fas fa-search mr-2"></i> Scan Artwork
+            </button>
+        </div>
+        
+        <!-- Loading State -->
+        <div id="loading" class="hidden mt-8">
+            <div class="text-center">
+                <div class="inline-block animate-spin rounded-full h-16 w-16 border-4 border-purple-200 border-t-purple-600 mb-4"></div>
+                <p class="text-xl font-medium text-gray-700">Analyzing artwork...</p>
+                <p class="text-gray-500">Using AI to identify the masterpiece</p>
+            </div>
+        </div>
+        
+        <!-- Error State -->
+        <div id="error" class="hidden mt-8">
+            <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg">
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-2xl mr-4 mt-1"></i>
+                    <div class="flex-1">
+                        <h4 class="font-bold text-red-900 mb-2 text-lg">This Doesn't Appear to Be a Famous Artwork</h4>
+                        <p id="error-message" class="text-red-700 mb-4"></p>
+                        
+                        <!-- Suggestions -->
+                        <div id="suggestions-area" class="hidden">
+                            <p class="font-semibold text-red-900 mb-2">💡 Try these instead:</p>
+                            <ul id="suggestions-list" class="list-disc list-inside space-y-1 text-red-700 text-sm">
+                                <!-- Suggestions will be added here -->
+                            </ul>
+                        </div>
+                        
+                        <!-- Try Again Button -->
+                        <button id="try-again-btn" class="mt-4 bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition">
+                            <i class="fas fa-redo mr-2"></i> Try Another Image
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Tips -->
+    <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="text-center p-6">
+            <i class="fas fa-lightbulb text-3xl text-yellow-500 mb-3"></i>
+            <h4 class="font-bold mb-2">Good Lighting</h4>
+            <p class="text-sm text-gray-600">Make sure the artwork is well-lit and clearly visible</p>
+        </div>
+        <div class="text-center p-6">
+            <i class="fas fa-crop text-3xl text-green-500 mb-3"></i>
+            <h4 class="font-bold mb-2">Frame It Well</h4>
+            <p class="text-sm text-gray-600">Include the entire artwork in your photo</p>
+        </div>
+        <div class="text-center p-6">
+            <i class="fas fa-hand-paper text-3xl text-blue-500 mb-3"></i>
+            <h4 class="font-bold mb-2">No Glare</h4>
+            <p class="text-sm text-gray-600">Avoid reflections and glare from glass or lighting</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const uploadZone = document.getElementById('upload-zone');
+    const fileInput = document.getElementById('file-input');
+    const uploadPrompt = document.getElementById('upload-prompt');
+    const previewArea = document.getElementById('preview-area');
+    const previewImage = document.getElementById('preview-image');
+    const scanBtn = document.getElementById('scan-btn');
+    const loadingDiv = document.getElementById('loading');
+    const errorDiv = document.getElementById('error');
+    const errorMessage = document.getElementById('error-message');
+    const suggestionsArea = document.getElementById('suggestions-area');
+    const suggestionsList = document.getElementById('suggestions-list');
+    const tryAgainBtn = document.getElementById('try-again-btn');
+    const changeImageBtn = document.getElementById('change-image-btn');
+    
+    let selectedFile = null;
+    
+    // Click to upload
+    uploadZone.addEventListener('click', () => {
+        if (!previewArea.classList.contains('hidden')) return;
+        fileInput.click();
+    });
+    
+    // Drag and drop
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('border-purple-500', 'bg-purple-50');
+    });
+    
+    uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('border-purple-500', 'bg-purple-50');
+    });
+    
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('border-purple-500', 'bg-purple-50');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelect(files[0]);
+        }
+    });
+    
+    // File input change
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+    
+    // Handle file selection
+    function handleFileSelect(file) {
+        if (!file.type.startsWith('image/')) {
+            alert('Please select an image file');
+            return;
+        }
+        
+        selectedFile = file;
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImage.src = e.target.result;
+            uploadPrompt.classList.add('hidden');
+            previewArea.classList.remove('hidden');
+            scanBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    // Change image
+    changeImageBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        uploadPrompt.classList.remove('hidden');
+        previewArea.classList.add('hidden');
+        scanBtn.disabled = true;
+        selectedFile = null;
+        fileInput.value = '';
+    });
+    
+    // Scan button
+    scanBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
+        
+        // Hide error
+        errorDiv.classList.add('hidden');
+        
+        // Show loading
+        loadingDiv.classList.remove('hidden');
+        scanBtn.disabled = true;
+        
+        // Create form data
+        const formData = new FormData();
+        formData.append('image', selectedFile);
+        
+        try {
+            const response = await fetch('/api/recognize', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Redirect to artwork page
+                window.location.href = `/artwork/${data.artwork_id}`;
+            } else {
+                // Show error with suggestions
+                loadingDiv.classList.add('hidden');
+                errorDiv.classList.remove('hidden');
+                errorMessage.textContent = data.message || 'Could not recognize this artwork.';
+                
+                // Show suggestions if available
+                if (data.suggestions && data.suggestions.length > 0) {
+                    suggestionsArea.classList.remove('hidden');
+                    suggestionsList.innerHTML = '';
+                    data.suggestions.forEach(suggestion => {
+                        const li = document.createElement('li');
+                        li.textContent = suggestion;
+                        suggestionsList.appendChild(li);
+                    });
+                } else {
+                    suggestionsArea.classList.add('hidden');
+                }
+                
+                scanBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            loadingDiv.classList.add('hidden');
+            errorDiv.classList.remove('hidden');
+            errorMessage.textContent = 'Network error. Please check your connection and try again.';
+            suggestionsArea.classList.add('hidden');
+            scanBtn.disabled = false;
+        }
+    });
+    
+    // Try again button
+    tryAgainBtn.addEventListener('click', () => {
+        errorDiv.classList.add('hidden');
+        uploadPrompt.classList.remove('hidden');
+        previewArea.classList.add('hidden');
+        scanBtn.disabled = true;
+        selectedFile = null;
+        fileInput.value = '';
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,982 @@
+{% extends "base.html" %}
+
+{% block title %}{{ artwork.title }} - ArtLens{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    
+    <!-- Success Message -->
+    <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 p-6 rounded-lg mb-8">
+        <div class="flex items-center">
+            <i class="fas fa-check-circle text-green-500 text-3xl mr-4"></i>
+            <div>
+                <h3 class="font-bold text-green-900 text-xl mb-1">You Discovered a Masterpiece!</h3>
+                <p class="text-green-700">+10 XP earned for this discovery</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Artwork Header -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        <!-- Image -->
+        <div class="bg-gradient-to-br from-purple-900 to-pink-900 rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center min-h-[400px]">
+            <img 
+                src="{{ artwork.image_url }}" 
+                alt="{{ artwork.title }}" 
+                class="w-full h-full object-cover"
+                onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'text-center p-12\'><i class=\'fas fa-image text-white text-6xl mb-4 opacity-50\'></i><p class=\'text-white text-xl font-bold\'>{{ artwork.title }}</p><p class=\'text-purple-200 mt-2\'>{{ artwork.artist }}</p></div>';">
+        </div>
+        
+        <!-- Info -->
+        <div class="flex flex-col justify-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 text-gray-900">{{ artwork.title }}</h1>
+            
+            <!-- AI Confidence Badge -->
+            {% if artwork.confidence %}
+            <div class="mb-4">
+                {% set confidence_percent = (artwork.confidence * 100)|int %}
+                {% if confidence_percent >= 90 %}
+                    {% set confidence_color = "green" %}
+                    {% set confidence_icon = "check-circle" %}
+                    {% set confidence_text = "Very High Confidence" %}
+                {% elif confidence_percent >= 80 %}
+                    {% set confidence_color = "blue" %}
+                    {% set confidence_icon = "info-circle" %}
+                    {% set confidence_text = "High Confidence" %}
+                {% elif confidence_percent >= 70 %}
+                    {% set confidence_color = "yellow" %}
+                    {% set confidence_icon = "exclamation-circle" %}
+                    {% set confidence_text = "Good Confidence" %}
+                {% else %}
+                    {% set confidence_color = "gray" %}
+                    {% set confidence_icon = "question-circle" %}
+                    {% set confidence_text = "Moderate Confidence" %}
+                {% endif %}
+                
+                <div class="inline-flex items-center px-4 py-2 bg-{{ confidence_color }}-50 border border-{{ confidence_color }}-200 rounded-full">
+                    <i class="fas fa-{{ confidence_icon }} text-{{ confidence_color }}-600 mr-2"></i>
+                    <span class="text-{{ confidence_color }}-800 font-medium text-sm">
+                        AI Recognition: {{ confidence_percent }}% {{ confidence_text }}
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="space-y-3 text-lg mb-6">
+                <p><span class="font-semibold">Artist:</span> {{ artwork.artist }}</p>
+                {% if artwork.year %}
+                <p><span class="font-semibold">Year:</span> {{ artwork.year }}</p>
+                {% endif %}
+                {% if artwork.movement %}
+                <p><span class="font-semibold">Movement:</span> 
+                    <span class="inline-block px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
+                        {{ artwork.movement }}
+                    </span>
+                </p>
+                {% endif %}
+                {% if artwork.museum %}
+                <p><span class="font-semibold">Location:</span> {{ artwork.museum }}</p>
+                {% endif %}
+            </div>
+            
+            {% if artwork.description %}
+            <p class="text-gray-600 mb-6">{{ artwork.description }}</p>
+            {% endif %}
+            
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap gap-3">
+                <button id="add-to-gallery-btn" 
+                    class="px-6 py-3 rounded-full font-medium transition {% if in_gallery %}bg-gray-400 text-gray-200 cursor-not-allowed{% else %}bg-purple-600 text-white hover:bg-purple-700{% endif %}"
+                    {% if in_gallery %}disabled{% endif %}>
+                    <i class="fas {% if in_gallery %}fa-check{% else %}fa-plus{% endif %} mr-2"></i> 
+                    {% if in_gallery %}Already in Gallery{% else %}Add to Gallery{% endif %}
+                </button>
+                <button id="share-btn" class="bg-gray-200 text-gray-700 px-6 py-3 rounded-full font-medium hover:bg-gray-300 transition">
+                    <i class="fas fa-share-alt mr-2"></i> Share
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Interaction Modes -->
+    <div class="mb-12">
+        <h2 class="text-3xl font-bold mb-6 text-center text-gray-900">Explore This Artwork</h2>
+        
+        <!-- Mode Tabs -->
+        <div class="flex flex-wrap justify-center gap-4 mb-8">
+            <button class="mode-tab active" data-mode="learn">
+                <i class="fas fa-book-open mr-2"></i> Learn
+            </button>
+            <button class="mode-tab" data-mode="artist">
+                <i class="fas fa-user-circle mr-2"></i> Artist
+            </button>
+            <button class="mode-tab" data-mode="chat">
+                <i class="fas fa-comments mr-2"></i> Chat
+            </button>
+            <button class="mode-tab" data-mode="quiz">
+                <i class="fas fa-question-circle mr-2"></i> Quiz
+            </button>
+            <button class="mode-tab" data-mode="related">
+                <i class="fas fa-palette mr-2"></i> Related Art
+            </button>
+        </div>
+        
+        <!-- Mode Content -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            
+            <!-- Learn Mode -->
+            <div id="learn-mode" class="mode-content">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-book-open text-purple-600 mr-2"></i> Learn About This Artwork
+                    </h3>
+                </div>
+                <div id="learn-content" class="prose max-w-none">
+                    <div class="text-center py-8">
+                        <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-200 border-t-purple-600"></div>
+                        <p class="mt-4 text-gray-600">Loading educational content...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Artist Mode -->
+            <div id="artist-mode" class="mode-content hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-user-circle text-purple-600 mr-2"></i> About the Artist
+                    </h3>
+                </div>
+                <div id="artist-content" class="prose max-w-none">
+                    <div class="text-center py-8">
+                        <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-200 border-t-purple-600"></div>
+                        <p class="mt-4 text-gray-600">Loading artist information...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Mode -->
+            <div id="chat-mode" class="mode-content hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-comments text-purple-600 mr-2"></i> Chat with {{ artwork.artist }}
+                    </h3>
+                </div>
+                
+                <div id="chat-messages" class="space-y-4 mb-6 max-h-96 overflow-y-auto p-4 bg-gray-50 rounded-lg">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold">
+                            AI
+                        </div>
+                        <div class="flex-1 bg-white p-4 rounded-lg shadow">
+                            <p class="text-gray-800">Hello! I'm {{ artwork.artist }}, the creator of "{{ artwork.title }}". Ask me anything about this painting – my inspiration, techniques, or the story behind it!</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3">
+                    <input type="text" id="chat-input" placeholder="Ask the artist a question..." class="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:border-purple-500">
+                    <button id="send-chat-btn" class="bg-purple-600 text-white px-6 py-3 rounded-full font-medium hover:bg-purple-700 transition">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Quiz Mode -->
+            <div id="quiz-mode" class="mode-content hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-question-circle text-purple-600 mr-2"></i> Test Your Knowledge
+                    </h3>
+                </div>
+                
+                <div id="quiz-content">
+                    <button id="start-quiz-btn" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-xl hover:shadow-lg transition">
+                        <i class="fas fa-play mr-2"></i> Start Quiz
+                    </button>
+                </div>
+                
+                <div id="quiz-questions" class="hidden space-y-6"></div>
+                
+                <div id="quiz-results" class="hidden text-center">
+                    <div class="mb-6">
+                        <div class="text-6xl mb-4" id="results-emoji">🎉</div>
+                        <h4 class="text-3xl font-bold mb-2" id="results-title">Great Job!</h4>
+                        <p class="text-xl text-gray-600" id="results-score"></p>
+                        <p class="text-purple-600 font-bold text-lg mt-2" id="results-xp"></p>
+                    </div>
+                    <div id="results-badges" class="mb-6"></div>
+                    <button id="retake-quiz-btn" class="bg-purple-600 text-white px-8 py-3 rounded-full font-medium hover:bg-purple-700 transition">
+                        <i class="fas fa-redo mr-2"></i> Retake Quiz (Same Questions)
+                    </button>
+                    <p class="text-sm text-gray-500 mt-3">
+                        💡 Practice with the same questions to improve your score!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Related Art Mode -->
+            <div id="related-mode" class="mode-content hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-palette text-purple-600 mr-2"></i> Explore Related Art
+                    </h3>
+                </div>
+                
+                <div id="related-content">
+                    <div class="text-center py-12">
+                        <button id="load-related-btn" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-xl hover:shadow-lg transition">
+                            <i class="fas fa-compass mr-2"></i> Discover Related Artworks
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="related-loading" class="hidden text-center py-12">
+                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                    <p class="text-gray-600 mt-4">Finding similar artworks...</p>
+                </div>
+                
+                <div id="related-results" class="hidden">
+                    <!-- Similar Artworks Grid -->
+                    <div class="mb-8">
+                        <h4 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-images text-purple-600 mr-2"></i> Similar Artworks
+                        </h4>
+                        <div id="similar-artworks-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                    </div>
+                    
+                    <!-- Contemporary Artists -->
+                    <div id="contemporary-artists-section" class="mb-8">
+                        <h4 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-users text-purple-600 mr-2"></i> Contemporary Artists
+                        </h4>
+                        <div id="contemporary-artists-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    </div>
+                    
+                    <!-- Historical Context -->
+                    <div id="historical-context-section" class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
+                        <h4 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-book text-purple-600 mr-2"></i> Historical Context
+                        </h4>
+                        <div id="historical-context-content" class="space-y-4"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add to Gallery Modal -->
+<div id="gallery-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full">
+        <h3 class="text-2xl font-bold mb-4">Add to Your Gallery</h3>
+        <p class="text-gray-600 mb-4">Share your thoughts and feelings about this artwork:</p>
+        <textarea id="reflection-input" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 mb-4" placeholder="What does this artwork mean to you?"></textarea>
+        <div class="flex gap-3">
+            <button id="save-gallery-btn" class="flex-1 bg-purple-600 text-white px-6 py-3 rounded-full font-medium hover:bg-purple-700 transition">
+                Save
+            </button>
+            <button id="cancel-gallery-btn" class="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-full font-medium hover:bg-gray-300 transition">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .mode-tab {
+        padding: 12px 24px;
+        border-radius: 9999px;
+        font-weight: 600;
+        background-color: #e5e7eb;
+        color: #4b5563;
+        transition: all 0.3s ease;
+    }
+    
+    .mode-tab:hover {
+        background-color: #d1d5db;
+    }
+    
+    .mode-tab.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .prose p {
+        margin-bottom: 1rem;
+        line-height: 1.8;
+        color: #374151;
+    }
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const artworkId = {{ artwork.id }};
+    let currentQuiz = null;
+    let currentAnswers = [];
+    
+    // Mode switching
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const mode = tab.dataset.mode;
+            
+            // Update tabs
+            document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // Update content
+            document.querySelectorAll('.mode-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById(`${mode}-mode`).classList.remove('hidden');
+            
+            // Load content if needed
+            if (mode === 'learn') {
+                loadLearnMode();
+            } else if (mode === 'artist') {
+                loadArtistMode();
+            }
+        });
+    });
+    
+    // Load Learn Mode
+    async function loadLearnMode() {
+        const content = document.getElementById('learn-content');
+        
+        try {
+            const response = await fetch(`/api/learn/${artworkId}`);
+            const data = await response.json();
+            
+            content.innerHTML = `<div class="text-lg leading-relaxed">${data.description.replace(/\n/g, '</p><p>')}</div>`;
+        } catch (error) {
+            content.innerHTML = '<p class="text-red-600">Error loading content. Please try again.</p>';
+        }
+    }
+    
+    // Load Artist Mode
+    async function loadArtistMode() {
+        const content = document.getElementById('artist-content');
+        
+        try {
+            const response = await fetch(`/api/artist/${artworkId}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                content.innerHTML = `
+                    <div class="space-y-6">
+                        <!-- Artist Header -->
+                        <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-xl">
+                            <h4 class="text-3xl font-bold text-gray-900 mb-2">${data.artist.name}</h4>
+                            ${data.artist.birth_year || data.artist.death_year ? `
+                                <p class="text-gray-600 text-lg">
+                                    ${data.artist.birth_year || '?'} - ${data.artist.death_year || 'present'}
+                                    ${data.artist.nationality ? ` • ${data.artist.nationality}` : ''}
+                                </p>
+                            ` : ''}
+                        </div>
+                        
+                        <!-- Biography -->
+                        <div>
+                            <h5 class="text-xl font-bold text-gray-900 mb-3 flex items-center">
+                                <i class="fas fa-book text-purple-600 mr-2"></i> Biography
+                            </h5>
+                            <div class="text-gray-700 leading-relaxed">
+                                ${data.artist.biography.replace(/\n/g, '</p><p class="mt-4">')}
+                            </div>
+                        </div>
+                        
+                        <!-- Artistic Style -->
+                        ${data.artist.style ? `
+                            <div>
+                                <h5 class="text-xl font-bold text-gray-900 mb-3 flex items-center">
+                                    <i class="fas fa-palette text-purple-600 mr-2"></i> Artistic Style
+                                </h5>
+                                <p class="text-gray-700 leading-relaxed">${data.artist.style}</p>
+                            </div>
+                        ` : ''}
+                        
+                        <!-- Notable Works -->
+                        ${data.artist.notable_works && data.artist.notable_works.length > 0 ? `
+                            <div>
+                                <h5 class="text-xl font-bold text-gray-900 mb-3 flex items-center">
+                                    <i class="fas fa-star text-purple-600 mr-2"></i> Notable Works
+                                </h5>
+                                <ul class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    ${data.artist.notable_works.map(work => `
+                                        <li class="flex items-start">
+                                            <i class="fas fa-image text-purple-400 mt-1 mr-2"></i>
+                                            <span class="text-gray-700">${work}</span>
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                        
+                        <!-- Influences -->
+                        ${data.artist.influences ? `
+                            <div>
+                                <h5 class="text-xl font-bold text-gray-900 mb-3 flex items-center">
+                                    <i class="fas fa-lightbulb text-purple-600 mr-2"></i> Influences & Legacy
+                                </h5>
+                                <p class="text-gray-700 leading-relaxed">${data.artist.influences}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                content.innerHTML = '<p class="text-red-600">Unable to load artist information.</p>';
+            }
+        } catch (error) {
+            content.innerHTML = '<p class="text-red-600">Error loading artist information. Please try again.</p>';
+        }
+    }
+    
+    // Chat functionality
+    const chatInput = document.getElementById('chat-input');
+    const sendChatBtn = document.getElementById('send-chat-btn');
+    const chatMessages = document.getElementById('chat-messages');
+    
+    async function sendMessage() {
+        const message = chatInput.value.trim();
+        if (!message) return;
+        
+        // Add user message
+        addChatMessage(message, 'user');
+        chatInput.value = '';
+        
+        // Show typing indicator
+        const typingId = addChatMessage('Typing...', 'assistant', true);
+        
+        try {
+            const response = await fetch(`/api/chat/${artworkId}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message})
+            });
+            
+            const data = await response.json();
+            
+            // Remove typing indicator
+            document.getElementById(typingId).remove();
+            
+            // Add AI response
+            addChatMessage(data.response, 'assistant');
+        } catch (error) {
+            document.getElementById(typingId).remove();
+            addChatMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+        }
+    }
+    
+    function addChatMessage(text, role, isTyping = false) {
+        const messageId = `msg-${Date.now()}`;
+        const isUser = role === 'user';
+        
+        const messageHTML = `
+            <div id="${messageId}" class="flex items-start space-x-3 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}">
+                <div class="w-10 h-10 rounded-full ${isUser ? 'bg-blue-600' : 'bg-purple-600'} text-white flex items-center justify-center font-bold">
+                    ${isUser ? 'You' : 'AI'}
+                </div>
+                <div class="flex-1 ${isUser ? 'bg-blue-50' : 'bg-white'} p-4 rounded-lg shadow">
+                    <p class="text-gray-800 ${isTyping ? 'italic text-gray-500' : ''}">${text}</p>
+                </div>
+            </div>
+        `;
+        
+        chatMessages.insertAdjacentHTML('beforeend', messageHTML);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        return messageId;
+    }
+    
+    sendChatBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+    
+    // Quiz functionality
+    const startQuizBtn = document.getElementById('start-quiz-btn');
+    const quizContent = document.getElementById('quiz-content');
+    const quizQuestions = document.getElementById('quiz-questions');
+    const quizResults = document.getElementById('quiz-results');
+    
+    startQuizBtn.addEventListener('click', loadQuiz);
+    
+    async function loadQuiz() {
+        quizContent.classList.add('hidden');
+        quizQuestions.classList.remove('hidden');
+        quizQuestions.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-200 border-t-purple-600"></div></div>';
+        
+        try {
+            const response = await fetch(`/api/quiz/${artworkId}`);
+            const data = await response.json();
+            
+            currentQuiz = data;
+            currentAnswers = [];
+            renderQuiz(data.questions);
+        } catch (error) {
+            quizQuestions.innerHTML = '<p class="text-red-600 text-center">Error loading quiz. Please try again.</p>';
+        }
+    }
+    
+    function renderQuiz(questions) {
+        let html = '';
+        questions.forEach((q, index) => {
+            html += `
+                <div class="quiz-question">
+                    <h4 class="font-bold text-lg mb-3">${index + 1}. ${q.question}</h4>
+                    <div class="space-y-2">
+                        ${q.options.map((opt, optIndex) => `
+                            <label class="block p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-purple-400 transition">
+                                <input type="radio" name="q${index}" value="${optIndex}" class="mr-3">
+                                ${opt}
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `
+            <button id="submit-quiz-btn" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-xl hover:shadow-lg transition mt-6">
+                <i class="fas fa-check mr-2"></i> Submit Quiz
+            </button>
+        `;
+        
+        quizQuestions.innerHTML = html;
+        
+        document.getElementById('submit-quiz-btn').addEventListener('click', submitQuiz);
+    }
+    
+    async function submitQuiz() {
+        // Collect answers
+        const answers = [];
+        const questions = document.querySelectorAll('.quiz-question');
+        
+        questions.forEach((q, index) => {
+            const selected = q.querySelector(`input[name="q${index}"]:checked`);
+            answers.push(selected ? parseInt(selected.value) : -1);
+        });
+        
+        try {
+            const response = await fetch(`/api/quiz/${currentQuiz.quiz_id}/submit`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({answers})
+            });
+            
+            const data = await response.json();
+            showQuizResults(data);
+        } catch (error) {
+            alert('Error submitting quiz. Please try again.');
+        }
+    }
+    
+    function showQuizResults(data) {
+        quizQuestions.classList.add('hidden');
+        quizResults.classList.remove('hidden');
+        
+        // Display score with best score info
+        let scoreText = `You scored ${data.score}% (${data.correct}/${data.total} correct)`;
+        if (data.is_best_score && data.previous_best > 0) {
+            scoreText += ` 🏆 New Personal Best! (Previous: ${data.previous_best}%)`;
+        } else if (data.best_score && data.score < data.best_score) {
+            scoreText += ` (Your best: ${data.best_score}%)`;
+        }
+        
+        document.getElementById('results-score').textContent = scoreText;
+        document.getElementById('results-xp').textContent = `+${data.xp_earned} XP earned!`;
+        
+        if (data.score >= 80) {
+            document.getElementById('results-emoji').textContent = '🎉';
+            document.getElementById('results-title').textContent = 'Excellent!';
+        } else if (data.score >= 60) {
+            document.getElementById('results-emoji').textContent = '👍';
+            document.getElementById('results-title').textContent = 'Good Job!';
+        } else {
+            document.getElementById('results-emoji').textContent = '📚';
+            document.getElementById('results-title').textContent = 'Keep Learning!';
+        }
+        
+        if (data.new_badges && data.new_badges.length > 0) {
+            const badgesHTML = data.new_badges.map(badge => {
+                let iconHTML;
+                if (badge.icon === 'logo') {
+                    iconHTML = `<img src="/static/images/logo.png" alt="ArtLens Logo" class="w-10 h-10 mx-auto mb-2 rounded-lg">`;
+                } else if (badge.icon.startsWith('fas')) {
+                    iconHTML = `<div class="text-3xl mb-2"><i class="${badge.icon}"></i></div>`;
+                } else {
+                    iconHTML = `<div class="text-3xl mb-2">${badge.icon}</div>`;
+                }
+                
+                return `
+                <div class="inline-block bg-yellow-100 border-2 border-yellow-400 rounded-lg p-4 m-2">
+                    ${iconHTML}
+                    <div class="font-bold">${badge.name}</div>
+                    <div class="text-sm text-gray-600">${badge.description}</div>
+                </div>
+                `;
+            }).join('');
+            document.getElementById('results-badges').innerHTML = `<h5 class="font-bold text-xl mb-4">New Badges Unlocked!</h5>${badgesHTML}`;
+        }
+    }
+    
+    document.getElementById('retake-quiz-btn').addEventListener('click', () => {
+        quizResults.classList.add('hidden');
+        quizContent.classList.remove('hidden');
+    });
+    
+    // Gallery modal
+    const galleryModal = document.getElementById('gallery-modal');
+    const addToGalleryBtn = document.getElementById('add-to-gallery-btn');
+    const saveGalleryBtn = document.getElementById('save-gallery-btn');
+    const cancelGalleryBtn = document.getElementById('cancel-gallery-btn');
+    const reflectionInput = document.getElementById('reflection-input');
+    
+    addToGalleryBtn.addEventListener('click', () => {
+        // Don't open modal if button is disabled (already in gallery)
+        if (addToGalleryBtn.disabled) {
+            return;
+        }
+        galleryModal.classList.remove('hidden');
+    });
+    
+    cancelGalleryBtn.addEventListener('click', () => {
+        galleryModal.classList.add('hidden');
+    });
+    
+    saveGalleryBtn.addEventListener('click', async () => {
+        const reflection = reflectionInput.value.trim();
+        
+        try {
+            const response = await fetch('/api/gallery/add', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({artwork_id: artworkId, reflection})
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert('Added to your gallery!');
+                galleryModal.classList.add('hidden');
+                reflectionInput.value = '';
+                
+                // Update button to show it's now in gallery
+                addToGalleryBtn.disabled = true;
+                addToGalleryBtn.className = 'px-6 py-3 rounded-full font-medium transition bg-gray-400 text-gray-200 cursor-not-allowed';
+                addToGalleryBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Already in Gallery';
+            } else {
+                // Handle error (e.g., already in gallery)
+                alert(data.message || 'Unable to add to gallery.');
+            }
+        } catch (error) {
+            alert('Error adding to gallery. Please try again.');
+        }
+    });
+    
+    // Share button functionality
+    const shareBtn = document.getElementById('share-btn');
+    shareBtn.addEventListener('click', async () => {
+        const shareData = {
+            title: `${artworkTitle} by ${artworkArtist}`,
+            text: `Check out this amazing artwork on ArtLens! ${artworkTitle} by ${artworkArtist}`,
+            url: window.location.href
+        };
+        
+        // Check if Web Share API is supported
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+                console.log('✅ Shared successfully');
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.log('❌ Error sharing:', err);
+                    fallbackShare();
+                }
+            }
+        } else {
+            // Fallback for browsers without Web Share API
+            fallbackShare();
+        }
+    });
+    
+    function fallbackShare() {
+        // Copy link to clipboard
+        const url = window.location.href;
+        
+        // Create temporary input
+        const tempInput = document.createElement('input');
+        tempInput.value = url;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        
+        try {
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            
+            // Show success message
+            showShareNotification('Link copied to clipboard! 📋');
+        } catch (err) {
+            document.body.removeChild(tempInput);
+            
+            // Show manual copy modal
+            showShareModal(url);
+        }
+    }
+    
+    function showShareNotification(message) {
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-20 right-4 bg-green-500 text-white shadow-lg rounded-lg px-6 py-3 z-50 transform transition-all duration-300';
+        notification.innerHTML = `
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-check-circle"></i>
+                <span class="font-semibold">${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.transform = 'translateX(400px)';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+    
+    function showShareModal(url) {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+        modal.innerHTML = `
+            <div class="bg-white rounded-2xl p-8 max-w-md w-full">
+                <h3 class="text-2xl font-bold mb-4 flex items-center">
+                    <i class="fas fa-share-alt text-purple-600 mr-3"></i>
+                    Share This Artwork
+                </h3>
+                <p class="text-gray-600 mb-4">Share this artwork with friends and family:</p>
+                <div class="bg-gray-100 rounded-lg p-3 mb-4 break-all text-sm">
+                    ${url}
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="copyFromModal('${url}')" class="flex-1 bg-purple-600 text-white px-6 py-3 rounded-full font-medium hover:bg-purple-700 transition">
+                        <i class="fas fa-copy mr-2"></i> Copy Link
+                    </button>
+                    <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-full font-medium hover:bg-gray-300 transition">
+                        Close
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Close on background click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+    }
+    
+    window.copyFromModal = function(url) {
+        const tempInput = document.createElement('input');
+        tempInput.value = url;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        
+        showShareNotification('Link copied to clipboard! 📋');
+        document.querySelector('.fixed.inset-0').remove();
+    };
+    
+    // Get artwork data for sharing
+    const artworkTitle = "{{ artwork.title }}";
+    const artworkArtist = "{{ artwork.artist }}";
+    
+    // Related Art functionality
+    const loadRelatedBtn = document.getElementById('load-related-btn');
+    const relatedContent = document.getElementById('related-content');
+    const relatedLoading = document.getElementById('related-loading');
+    const relatedResults = document.getElementById('related-results');
+    
+    loadRelatedBtn.addEventListener('click', async () => {
+        relatedContent.classList.add('hidden');
+        relatedLoading.classList.remove('hidden');
+        
+        // Show progress message
+        const loadingText = relatedLoading.querySelector('p');
+        const messages = [
+            'Searching The Met Museum collection...',
+            'Finding similar artworks...',
+            'Analyzing artistic connections...',
+            'Almost there...'
+        ];
+        let messageIndex = 0;
+        const messageInterval = setInterval(() => {
+            if (messageIndex < messages.length) {
+                loadingText.textContent = messages[messageIndex];
+                messageIndex++;
+            }
+        }, 1500);
+        
+        try {
+            const startTime = Date.now();
+            const response = await fetch(`/api/related/${artworkId}`);
+            const data = await response.json();
+            const loadTime = Date.now() - startTime;
+            
+            clearInterval(messageInterval);
+            console.log(`✅ Loaded related artworks in ${loadTime}ms`);
+            
+            relatedLoading.classList.add('hidden');
+            relatedResults.classList.remove('hidden');
+            
+            // Display similar artworks
+            const similarGrid = document.getElementById('similar-artworks-grid');
+            similarGrid.innerHTML = data.similar_artworks.map((artwork, index) => `
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 cursor-pointer group" onclick="viewRelatedArtwork('${artwork.title.replace(/'/g, "\\'")}', '${artwork.artist.replace(/'/g, "\\'")}', '${artwork.year}', '${artwork.image_url}', '${artwork.similarity.replace(/'/g, "\\'")}', '${(artwork.movement || 'Unknown').replace(/'/g, "\\'")}')">
+                    <!-- Artwork Image (only show if valid URL) -->
+                    ${artwork.image_url && !artwork.image_url.includes('placeholder') ? `
+                    <div class="bg-gradient-to-br from-purple-900 to-pink-900 h-48 flex items-center justify-center relative overflow-hidden">
+                        <img 
+                            src="${artwork.image_url}" 
+                            alt="${artwork.title}" 
+                            class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                            onerror="this.closest('.bg-gradient-to-br').style.display='none';">
+                        <!-- Click overlay hint -->
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                            <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white text-center">
+                                <i class="fas fa-arrow-right text-3xl mb-2"></i>
+                                <p class="font-bold">Learn More</p>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- Artwork Info -->
+                    <div class="p-6">
+                        <div class="mb-4">
+                            <h5 class="font-bold text-xl text-gray-900 mb-2 group-hover:text-purple-600 transition-colors">${artwork.title}</h5>
+                            <p class="text-purple-600 font-semibold text-lg">${artwork.artist}</p>
+                            <p class="text-gray-500 text-sm mt-1">${artwork.year}</p>
+                            ${artwork.movement && artwork.movement !== 'Unknown' ? `<p class="text-gray-500 text-xs mt-1"><i class="fas fa-palette mr-1"></i>${artwork.movement}</p>` : ''}
+                        </div>
+                        <div class="border-t border-gray-100 pt-4">
+                            <p class="text-gray-700 leading-relaxed text-sm">${artwork.similarity}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Display contemporary artists
+            const artistsGrid = document.getElementById('contemporary-artists-grid');
+            if (data.contemporary_artists && data.contemporary_artists.length > 0) {
+                artistsGrid.innerHTML = data.contemporary_artists.map(artist => `
+                    <div class="bg-white rounded-lg p-4 shadow hover:shadow-lg transition">
+                        <h5 class="font-bold text-lg text-gray-900">${artist.name}</h5>
+                        <p class="text-purple-600 text-sm">${artist.years} • ${artist.movement}</p>
+                        <p class="text-gray-600 text-sm mt-2"><strong>Notable Work:</strong> ${artist.notable_work}</p>
+                        <p class="text-gray-700 text-sm mt-2">${artist.connection}</p>
+                    </div>
+                `).join('');
+                document.getElementById('contemporary-artists-section').classList.remove('hidden');
+            } else {
+                document.getElementById('contemporary-artists-section').classList.add('hidden');
+            }
+            
+            // Display historical context
+            const contextContent = document.getElementById('historical-context-content');
+            if (data.historical_context && Object.keys(data.historical_context).length > 0) {
+                const ctx = data.historical_context;
+                contextContent.innerHTML = `
+                    ${ctx.time_period ? `
+                    <div class="mb-4">
+                        <h5 class="font-bold text-gray-800 mb-2 flex items-center">
+                            <i class="fas fa-clock text-purple-600 mr-2"></i> Time Period
+                        </h5>
+                        <p class="text-gray-700 leading-relaxed">${ctx.time_period}</p>
+                    </div>
+                    ` : ''}
+                    ${ctx.art_movement ? `
+                    <div class="mb-4">
+                        <h5 class="font-bold text-gray-800 mb-2 flex items-center">
+                            <i class="fas fa-paint-brush text-purple-600 mr-2"></i> Art Movement
+                        </h5>
+                        <p class="text-gray-700 leading-relaxed">${ctx.art_movement}</p>
+                    </div>
+                    ` : ''}
+                    ${ctx.artist_story ? `
+                    <div>
+                        <h5 class="font-bold text-gray-800 mb-2 flex items-center">
+                            <i class="fas fa-user text-purple-600 mr-2"></i> Artist Story
+                        </h5>
+                        <p class="text-gray-700 leading-relaxed">${ctx.artist_story}</p>
+                    </div>
+                    ` : ''}
+                `;
+                document.getElementById('historical-context-section').classList.remove('hidden');
+            } else {
+                document.getElementById('historical-context-section').classList.add('hidden');
+            }
+            
+        } catch (error) {
+            clearInterval(messageInterval);
+            relatedLoading.classList.add('hidden');
+            relatedContent.classList.remove('hidden');
+            console.error('Error loading related content:', error);
+            alert('Error loading related content. Please try again.');
+        }
+    });
+    
+    // Handle clicking on related artwork
+    window.viewRelatedArtwork = async function(title, artist, year, imageUrl, similarity, movement) {
+        // Check if this artwork exists in our database
+        try {
+            const response = await fetch(`/api/artwork/search?title=${encodeURIComponent(title)}&artist=${encodeURIComponent(artist)}`);
+            const data = await response.json();
+            
+            if (data.exists) {
+                // Navigate to the existing artwork page in new tab
+                window.open(`/artwork/${data.artwork_id}`, '_blank');
+            } else {
+                // Create the artwork in database and navigate to it
+                createAndViewArtwork(title, artist, year, imageUrl, similarity, movement);
+            }
+        } catch (error) {
+            console.error('Error checking artwork:', error);
+            alert('Error loading artwork. Please try again.');
+        }
+    };
+    
+    // Create artwork in database and navigate to it
+    async function createAndViewArtwork(title, artist, year, imageUrl, similarity, movement) {
+        try {
+            const response = await fetch('/api/artwork/create', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    title: title,
+                    artist: artist,
+                    year: year,
+                    image_url: imageUrl,
+                    description: similarity,
+                    movement: movement || 'Unknown'
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Navigate to the new artwork page in new tab
+                window.open(`/artwork/${data.artwork_id}`, '_blank');
+            } else {
+                alert('Error creating artwork. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error creating artwork:', error);
+            alert('Error loading artwork. Please try again.');
+        }
+    }
+    
+    // Load learn mode by default
+    loadLearnMode();
+</script>
+{% endblock %}

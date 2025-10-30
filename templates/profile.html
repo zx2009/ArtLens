@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }}'s Profile - ArtLens{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    
+    <!-- Profile Header -->
+    <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl p-8 mb-8">
+        <div class="flex items-center space-x-6">
+            <div class="w-24 h-24 bg-white text-purple-600 rounded-full flex items-center justify-center text-4xl font-bold">
+                {{ user.username[0].upper() }}
+            </div>
+            <div class="flex-1">
+                <h1 class="text-4xl font-bold mb-2">{{ user.username }}</h1>
+                <p class="text-purple-100 mb-3">{{ user.email }}</p>
+                <div class="flex items-center space-x-4">
+                    <span class="px-4 py-2 bg-white bg-opacity-20 rounded-full font-semibold">
+                        Level {{ user.level }}
+                    </span>
+                    <span class="px-4 py-2 bg-white bg-opacity-20 rounded-full font-semibold">
+                        {{ user.xp }} XP
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- XP Progress Bar -->
+        <div class="mt-6">
+            <div class="flex justify-between text-sm mb-2">
+                <span>Progress to Level {{ user.level + 1 }}</span>
+                <span>{{ user.xp % 100 }}/100 XP</span>
+            </div>
+            <div class="w-full bg-white bg-opacity-20 rounded-full h-3">
+                <div class="bg-white rounded-full h-3 transition-all duration-500" style="width: {{ (user.xp % 100) }}%"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+            <div class="text-4xl text-purple-600 mb-2"><img src="static/images/logo.png" alt="ArtLens Logo"></div>
+            <div class="text-3xl font-bold text-gray-900 mb-1">{{ user.artworks_discovered }}</div>
+            <div class="text-gray-600">Artworks Discovered</div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+            <div class="text-4xl text-purple-600 mb-2">📝</div>
+            <div class="text-3xl font-bold text-gray-900 mb-1">{{ user.quizzes_completed }}</div>
+            <div class="text-gray-600">Quizzes Completed</div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+            <div class="text-4xl text-purple-600 mb-2">🏆</div>
+            <div class="text-3xl font-bold text-gray-900 mb-1">{{ user.get_badges()|length }}</div>
+            <div class="text-gray-600">Badges Earned</div>
+        </div>
+    </div>
+    
+    <!-- Badges -->
+    <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+        <h2 class="text-2xl font-bold mb-6 text-gray-900">
+            <i class="fas fa-trophy text-yellow-500 mr-2"></i> Badges & Achievements
+        </h2>
+        
+        {% set badges = user.get_badges() %}
+        {% if badges|length > 0 %}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {% for badge_id in badges %}
+                {% set badge_info = config.BADGES[badge_id] %}
+                <div class="text-center p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-2 border-yellow-200">
+                    {% if badge_info.icon == 'logo' %}
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ArtLens Logo" class="w-12 h-12 mx-auto mb-2 rounded-lg">
+                    {% elif badge_info.icon.startswith('fas') %}
+                        <div class="text-4xl mb-2"><i class="{{ badge_info.icon }}"></i></div>
+                    {% else %}
+                        <div class="text-4xl mb-2">{{ badge_info.icon }}</div>
+                    {% endif %}
+                    <div class="font-bold text-sm">{{ badge_info.name }}</div>
+                    <div class="text-xs text-gray-600 mt-1">{{ badge_info.description }}</div>
+                </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-gray-500">
+            <div class="text-5xl mb-3">🏅</div>
+            <p>No badges yet. Keep exploring to earn achievements!</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="bg-white rounded-2xl shadow-lg p-8">
+        <h2 class="text-2xl font-bold mb-6 text-gray-900">
+            <i class="fas fa-history text-purple-600 mr-2"></i> Recent Activity
+        </h2>
+        
+        <div class="space-y-4">
+            <div class="flex items-center space-x-4 p-4 bg-purple-50 rounded-lg">
+                <div class="text-2xl"><img src="static/images/logo.png" alt="ArtLens Logo"></div>
+                <div class="flex-1">
+                    <p class="font-medium">Joined ArtLens</p>
+                    <p class="text-sm text-gray-600">{{ user.created_at.strftime('%B %d, %Y') }}</p>
+                </div>
+            </div>
+            
+            {% if user.last_login %}
+            <div class="flex items-center space-x-4 p-4 bg-blue-50 rounded-lg">
+                <div class="text-2xl">🔐</div>
+                <div class="flex-1">
+                    <p class="font-medium">Last Login</p>
+                    <p class="text-sm text-gray-600">{{ user.last_login.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

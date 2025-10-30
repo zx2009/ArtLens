@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Leaderboard - ArtLens{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="text-center mb-12">
+        <div class="text-6xl mb-4">🏆</div>
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
+            Leaderboard
+        </h1>
+        <p class="text-xl text-gray-600">
+            Top art explorers on ArtLens
+        </p>
+    </div>
+    
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                    <tr>
+                        <th class="px-6 py-4 text-left">Rank</th>
+                        <th class="px-6 py-4 text-left">User</th>
+                        <th class="px-6 py-4 text-center">Level</th>
+                        <th class="px-6 py-4 text-center">XP</th>
+                        <th class="px-6 py-4 text-center">Artworks</th>
+                        <th class="px-6 py-4 text-center">Quizzes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr class="border-b hover:bg-purple-50 transition {% if user.id == current_user.id %}bg-purple-100{% endif %}">
+                        <td class="px-6 py-4">
+                            <span class="font-bold text-2xl {% if loop.index == 1 %}text-yellow-500{% elif loop.index == 2 %}text-gray-400{% elif loop.index == 3 %}text-orange-600{% else %}text-gray-600{% endif %}">
+                                {% if loop.index == 1 %}🥇
+                                {% elif loop.index == 2 %}🥈
+                                {% elif loop.index == 3 %}🥉
+                                {% else %}{{ loop.index }}
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold">
+                                    {{ user.username[0].upper() }}
+                                </div>
+                                <div>
+                                    <div class="font-bold">
+                                        {{ user.username }}
+                                        {% if user.id == current_user.id %}
+                                        <span class="text-xs bg-purple-600 text-white px-2 py-1 rounded-full ml-2">You</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full font-semibold">
+                                {{ user.level }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center font-bold text-purple-600">
+                            {{ user.xp }}
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            {{ user.artworks_discovered }}
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            {{ user.quizzes_completed }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="mt-8 text-center">
+        <a href="{{ url_for('scan') }}" class="btn-primary text-white px-8 py-3 rounded-full font-bold inline-block">
+            <i class="fas fa-rocket mr-2"></i> Climb the Ranks
+        </a>
+    </div>
+</div>
+{% endblock %}

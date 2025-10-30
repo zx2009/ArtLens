@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ArtLens - See. Learn. Feel. Create.{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Theme Variables - Default (Spring) */
+        :root {
+            --primary: #10b981;
+            --secondary: #34d399;
+            --accent: #fbbf24;
+            --gallery-bg: #f0fdf4;
+            --nav-bg: #ffffff;
+            --card-bg: #ffffff;
+            --text-primary: #1f2937;
+            --gradient-from: #34d399;
+            --gradient-to: #059669;
+        }
+        
+        /* Spring Theme (Default) */
+        [data-theme="spring"] {
+            --primary: #10b981;
+            --secondary: #34d399;
+            --accent: #fbbf24;
+            --gallery-bg: #f0fdf4;
+            --nav-bg: #ffffff;
+            --card-bg: #ffffff;
+            --text-primary: #1f2937;
+            --gradient-from: #34d399;
+            --gradient-to: #059669;
+        }
+        
+        /* Summer Theme */
+        [data-theme="summer"] {
+            --primary: #f59e0b;
+            --secondary: #fbbf24;
+            --accent: #ef4444;
+            --gallery-bg: #fffbeb;
+            --nav-bg: #ffffff;
+            --card-bg: #ffffff;
+            --text-primary: #1f2937;
+            --gradient-from: #f59e0b;
+            --gradient-to: #dc2626;
+        }
+        
+        /* Fall Theme */
+        [data-theme="fall"] {
+            --primary: #d97706;
+            --secondary: #f59e0b;
+            --accent: #dc2626;
+            --gallery-bg: #fef3c7;
+            --nav-bg: #ffffff;
+            --card-bg: #ffffff;
+            --text-primary: #1f2937;
+            --gradient-from: #dc2626;
+            --gradient-to: #7c2d12;
+        }
+        
+        /* Winter Theme */
+        [data-theme="winter"] {
+            --primary: #0ea5e9;
+            --secondary: #38bdf8;
+            --accent: #818cf8;
+            --gallery-bg: #f0f9ff;
+            --nav-bg: #ffffff;
+            --card-bg: #ffffff;
+            --text-primary: #1f2937;
+            --gradient-from: #0ea5e9;
+            --gradient-to: #6366f1;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--gallery-bg);
+            transition: background-color 0.3s ease;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .art-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background-color: var(--card-bg);
+        }
+        
+        .art-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--gradient-from) 0%, var(--gradient-to) 100%);
+        }
+        
+        .badge-icon {
+            display: inline-block;
+            font-size: 2rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+        
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gradient-from) 0%, var(--gradient-to) 100%);
+            transition: transform 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: scale(1.05);
+        }
+        
+        /* Theme selector styles */
+        .theme-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .theme-btn:hover {
+            transform: scale(1.1);
+            border-color: rgba(0,0,0,0.2);
+        }
+        
+        .theme-btn.active {
+            border-color: rgba(0,0,0,0.4);
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
+        }
+        
+        .theme-spring { background: linear-gradient(135deg, #34d399 0%, #059669 100%); }
+        .theme-summer { background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%); }
+        .theme-fall { background: linear-gradient(135deg, #dc2626 0%, #7c2d12 100%); }
+        .theme-winter { background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%); }
+        
+        .theme-selector {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .theme-icon {
+            font-size: 18px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="min-h-screen">
+    
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="{{ url_for('index') }}" class="flex items-center space-x-3">
+                        <img src="{{ url_for('static', filename='images/logo2.jpeg') }}" alt="ArtLens Logo" class="h-10 w-10 rounded-lg shadow-sm">
+                        <span class="text-2xl font-bold text-gray-900" style="font-family: 'Playfair Display', serif;">ArtLens</span>
+                    </a>
+                </div>
+                
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-8">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('scan') }}" class="nav-link text-gray-700 hover:text-purple-600 font-medium">
+                            <i class="fas fa-camera mr-1"></i> Scan
+                        </a>
+                        <a href="{{ url_for('my_gallery') }}" class="nav-link text-gray-700 hover:text-purple-600 font-medium">
+                            <i class="fas fa-images mr-1"></i> My Gallery
+                        </a>
+                        <a href="{{ url_for('leaderboard') }}" class="nav-link text-gray-700 hover:text-purple-600 font-medium">
+                            <i class="fas fa-trophy mr-1"></i> Leaderboard
+                        </a>
+                        <a href="{{ url_for('profile') }}" class="nav-link text-gray-700 hover:text-purple-600 font-medium">
+                            <i class="fas fa-user mr-1"></i> Profile
+                            <span class="ml-1 px-2 py-0.5 bg-purple-100 text-purple-800 text-xs rounded-full">
+                                {{ current_user.xp }} XP
+                            </span>
+                        </a>
+                        
+                        <!-- Theme Selector -->
+                        <div class="theme-selector" title="Choose Theme">
+                            <button class="theme-btn theme-spring active" data-theme="spring" title="Spring">
+                                <span class="theme-icon">🌸</span>
+                            </button>
+                            <button class="theme-btn theme-summer" data-theme="summer" title="Summer">
+                                <span class="theme-icon">☀️</span>
+                            </button>
+                            <button class="theme-btn theme-fall" data-theme="fall" title="Fall">
+                                <span class="theme-icon">🍂</span>
+                            </button>
+                            <button class="theme-btn theme-winter" data-theme="winter" title="Winter">
+                                <span class="theme-icon">❄️</span>
+                            </button>
+                        </div>
+                        
+                        <a href="{{ url_for('logout') }}" class="text-gray-700 hover:text-red-600 font-medium">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="nav-link text-gray-700 hover:text-purple-600 font-medium">
+                            Login
+                        </a>
+                        <a href="{{ url_for('register') }}" class="btn-primary text-white px-6 py-2 rounded-full font-medium">
+                            Get Started
+                        </a>
+                    {% endif %}
+                </div>
+                
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" class="text-gray-700 hover:text-purple-600">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+            <div class="px-4 pt-2 pb-3 space-y-1">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('scan') }}" class="block px-3 py-2 text-gray-700 hover:bg-purple-50 rounded">
+                        <i class="fas fa-camera mr-2"></i> Scan
+                    </a>
+                    <a href="{{ url_for('my_gallery') }}" class="block px-3 py-2 text-gray-700 hover:bg-purple-50 rounded">
+                        <i class="fas fa-images mr-2"></i> My Gallery
+                    </a>
+                    <a href="{{ url_for('leaderboard') }}" class="block px-3 py-2 text-gray-700 hover:bg-purple-50 rounded">
+                        <i class="fas fa-trophy mr-2"></i> Leaderboard
+                    </a>
+                    <a href="{{ url_for('profile') }}" class="block px-3 py-2 text-gray-700 hover:bg-purple-50 rounded">
+                        <i class="fas fa-user mr-2"></i> Profile ({{ current_user.xp }} XP)
+                    </a>
+                    
+                    <!-- Theme Selector for Mobile -->
+                    <div class="px-3 py-3 border-t border-gray-200">
+                        <p class="text-sm text-gray-500 mb-2">Choose Theme:</p>
+                        <div class="theme-selector justify-start">
+                            <button class="theme-btn theme-spring active" data-theme="spring" title="Spring">
+                                <span class="theme-icon">🌸</span>
+                            </button>
+                            <button class="theme-btn theme-summer" data-theme="summer" title="Summer">
+                                <span class="theme-icon">☀️</span>
+                            </button>
+                            <button class="theme-btn theme-fall" data-theme="fall" title="Fall">
+                                <span class="theme-icon">🍂</span>
+                            </button>
+                            <button class="theme-btn theme-winter" data-theme="winter" title="Winter">
+                                <span class="theme-icon">❄️</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <a href="{{ url_for('logout') }}" class="block px-3 py-2 text-red-600 hover:bg-red-50 rounded">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="block px-3 py-2 text-gray-700 hover:bg-purple-50 rounded">
+                        Login
+                    </a>
+                    <a href="{{ url_for('register') }}" class="block px-3 py-2 text-purple-600 hover:bg-purple-50 rounded font-medium">
+                        Get Started
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                {% for category, message in messages %}
+                    <div class="p-4 rounded-lg mb-4 {% if category == 'error' %}bg-red-50 text-red-800{% else %}bg-green-50 text-green-800{% endif %}">
+                        <i class="fas {% if category == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} mr-2"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Main content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">ArtLens</h3>
+                    <p class="text-gray-400">Making art discovery fun, interactive, and educational through AI.</p>
+                    <p class="text-sm text-gray-500 mt-4">Congressional App Challenge 2025</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Features</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><i class="fas fa-check mr-2 text-green-400"></i> AI Artwork Recognition</li>
+                        <li><i class="fas fa-check mr-2 text-green-400"></i> Interactive Learning</li>
+                        <li><i class="fas fa-check mr-2 text-green-400"></i> Chat with Art</li>
+                        <li><i class="fas fa-check mr-2 text-green-400"></i> Quiz Challenges</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Mission</h4>
+                    <p class="text-gray-400 italic">"See. Learn. Feel. Create."</p>
+                    <p class="text-gray-400 mt-4">Democratizing art education through technology.</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500">
+                <p>&copy; 2025 ArtLens. Built with 💜 for art lovers everywhere.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+        
+        // Theme system
+        const themeButtons = document.querySelectorAll('.theme-btn');
+        const root = document.documentElement;
+        
+        // Load saved theme or default to spring
+        const savedTheme = localStorage.getItem('artlens-theme') || 'spring';
+        setTheme(savedTheme);
+        
+        // Theme button click handlers
+        themeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const theme = this.getAttribute('data-theme');
+                setTheme(theme);
+                localStorage.setItem('artlens-theme', theme);
+                
+                // Show theme change notification
+                showThemeNotification(theme);
+            });
+        });
+        
+        function setTheme(theme) {
+            root.setAttribute('data-theme', theme);
+            
+            // Update active button
+            themeButtons.forEach(btn => {
+                if (btn.getAttribute('data-theme') === theme) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+        
+        function showThemeNotification(theme) {
+            const themeNames = {
+                'spring': '🌸 Spring Theme',
+                'summer': '☀️ Summer Theme',
+                'fall': '🍂 Fall Theme',
+                'winter': '❄️ Winter Theme'
+            };
+            
+            // Create notification
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-20 right-4 bg-white shadow-lg rounded-lg px-6 py-3 z-50 transform transition-all duration-300';
+            notification.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <span class="text-lg font-semibold">${themeNames[theme]}</span>
+                    <span class="text-sm text-gray-500">activated!</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 10);
+            
+            // Remove after 2 seconds
+            setTimeout(() => {
+                notification.style.transform = 'translateX(400px)';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 2000);
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

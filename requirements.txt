@@ -1,0 +1,21 @@
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+Flask-Caching==2.1.0
+Werkzeug==3.0.1
+Pillow>=10.0.0
+requests>=2.31.0
+
+# AI Integration (for real artwork recognition)
+openai>=1.12.0
+
+# Optional: Azure Custom Vision (alternative to OpenAI)
+# azure-cognitiveservices-vision-customvision==3.1.0
+# msrest==0.7.1
+
+# Database (optional for PostgreSQL in production)
+# psycopg2-binary==2.9.9
+
+# For deployment
+gunicorn==21.2.0
+python-dotenv==1.0.0

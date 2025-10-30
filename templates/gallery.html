@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}My Gallery - ArtLens{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="text-center mb-12">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
+            My Art Gallery
+        </h1>
+        <p class="text-xl text-gray-600">
+            Your curated collection of favorite artworks
+        </p>
+    </div>
+    
+    {% if galleries|length > 0 %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for item in galleries %}
+        <div class="art-card bg-white rounded-2xl shadow-lg overflow-hidden">
+            <a href="{{ url_for('artwork_detail', artwork_id=item.artwork.id) }}" class="block">
+                <div class="bg-gradient-to-br from-purple-900 to-pink-900 w-full h-64 flex items-center justify-center relative overflow-hidden">
+                    <img 
+                        src="{{ item.artwork.image_url }}" 
+                        alt="{{ item.artwork.title }}" 
+                        class="w-full h-full object-cover"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-8" style="display: none;">
+                        <i class="fas fa-image text-white text-4xl mb-2 opacity-50"></i>
+                        <p class="text-white font-bold">{{ item.artwork.title }}</p>
+                        <p class="text-purple-200 text-sm mt-1">{{ item.artwork.artist }}</p>
+                    </div>
+                </div>
+            </a>
+            <div class="p-6">
+                <h3 class="text-xl font-bold mb-2">{{ item.artwork.title }}</h3>
+                <p class="text-gray-600 mb-3">{{ item.artwork.artist }}</p>
+                {% if item.reflection %}
+                <div class="bg-purple-50 p-4 rounded-lg mb-3">
+                    <p class="text-sm text-gray-700 italic">"{{ item.reflection }}"</p>
+                </div>
+                {% endif %}
+                <div class="flex justify-between items-center text-sm text-gray-500">
+                    <span><i class="far fa-calendar mr-1"></i> Added {{ item.added_at.strftime('%b %d, %Y') }}</span>
+                    <div class="flex gap-2">
+                        <a href="{{ url_for('artwork_detail', artwork_id=item.artwork.id) }}" class="text-purple-600 hover:text-purple-800 font-medium">
+                            View <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                        <button onclick="removeFromGallery({{ item.id }}, event)" class="text-red-600 hover:text-red-800 font-medium" title="Remove from gallery">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-20">
+        <div class="text-6xl mb-6">🖼️</div>
+        <h3 class="text-2xl font-bold mb-3 text-gray-900">Your Gallery is Empty</h3>
+        <p class="text-gray-600 mb-8">Start discovering artworks to build your personal collection!</p>
+        <a href="{{ url_for('scan') }}" class="btn-primary text-white px-8 py-3 rounded-full font-bold text-lg inline-block">
+            <i class="fas fa-camera mr-2"></i> Scan Your First Artwork
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    async function removeFromGallery(galleryId, event) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        // Confirm deletion
+        if (!confirm('Are you sure you want to remove this artwork from your gallery?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/gallery/remove/${galleryId}`, {
+                method: 'DELETE'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Show success message
+                showNotification('Removed from gallery! 🗑️', 'success');
+                
+                // Remove the card with animation
+                const card = event.target.closest('.art-card');
+                card.style.transition = 'all 0.3s ease';
+                card.style.transform = 'scale(0)';
+                card.style.opacity = '0';
+                
+                setTimeout(() => {
+                    card.remove();
+                    
+                    // Check if gallery is now empty
+                    const remainingCards = document.querySelectorAll('.art-card');
+                    if (remainingCards.length === 0) {
+                        // Reload page to show empty state
+                        location.reload();
+                    }
+                }, 300);
+            } else {
+                showNotification('Error removing from gallery. Please try again.', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('Error removing from gallery. Please try again.', 'error');
+        }
+    }
+    
+    function showNotification(message, type = 'success') {
+        const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+        const notification = document.createElement('div');
+        notification.className = `fixed top-20 right-4 ${bgColor} text-white shadow-lg rounded-lg px-6 py-3 z-50 transform transition-all duration-300`;
+        notification.innerHTML = `
+            <div class="flex items-center space-x-2">
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                <span class="font-semibold">${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.style.transform = 'translateX(0)';
+        }, 10);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.style.transform = 'translateX(400px)';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+</script>
+{% endblock %}
